@@ -6,6 +6,7 @@
 #include "trimesh2/Vec3Utils.h"
 
 #include "internal/poly/polygonstack.h"
+#include <cfloat>
 
 namespace msbase
 {
