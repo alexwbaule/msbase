@@ -1,4 +1,5 @@
 #include "msbase/primitive.h"
+#include "trimesh2/quaternion.h"
 
 namespace msbase
 {
@@ -413,6 +414,207 @@ namespace msbase
 		mesh.triangles.push_back(1);
 
 		return mesh.convert();
+	}
+
+	/// <summary>
+	/// 
+	/// </summary>
+	/// <param name="position"></param>
+	/// <param name="normal"></param>
+	/// <param name="depth"></param>
+	/// <param name="radius"></param>
+	/// <param name="num"></param>
+	/// <param name="theta"></param>
+	/// <returns></returns>
+	trimesh::TriMesh* createCylinderMeshFromCenter(const trimesh::vec3& position, const trimesh::vec3& normal,
+		float depth, float radius, int num, float theta)
+	{
+		trimesh::vec3 _normal = trimesh::normalized(normal);
+
+		trimesh::vec3 bottom = position + 2.0f * _normal;
+		trimesh::vec3 top = position - (depth + 2.0f) * _normal;
+
+		return createCylinderMesh(top, bottom, radius, num);
+	}
+
+	trimesh::TriMesh* createCylinderMesh(const trimesh::vec3& top, const trimesh::vec3& bottom, float radius, int num, float theta)
+	{
+		trimesh::TriMesh* mesh = new trimesh::TriMesh();
+
+		int hPart = num;
+
+		trimesh::vec3 start = bottom;
+		trimesh::vec3 end = top;
+
+		trimesh::vec3 dir = end - start;
+		//dir.normalize();
+		trimesh::normalize(dir);
+		trimesh::quaternion q = trimesh::quaternion::fromDirection(dir, trimesh::vec3(0.0f, 0.0f, 1.0f));
+
+		theta *= M_PIf / 180.0f;
+		float deltaTheta = M_PIf * 2.0f / (float)(hPart);
+		std::vector<float> cosValue;
+		std::vector<float> sinValue;
+		for (int i = 0; i < hPart; ++i)
+		{
+			//cosValue.push_back(qCos(deltaTheta * (float)i + theta));
+			//sinValue.push_back(qSin(deltaTheta * (float)i + theta));
+
+			cosValue.push_back(std::cos(deltaTheta * (float)i + theta));
+			sinValue.push_back(std::sin(deltaTheta * (float)i + theta));
+		}
+
+		std::vector<trimesh::vec3> baseNormals;
+		for (int i = 0; i < hPart; ++i)
+		{
+			baseNormals.push_back(trimesh::vec3(cosValue[i], sinValue[i], 0.0f));
+		}
+
+		int vertexNum = 2 * hPart;
+		std::vector<trimesh::vec3> points(vertexNum);
+		int faceNum = 4 * hPart - 4;
+		mesh->faces.resize(faceNum);
+
+		int vertexIndex = 0;
+		for (int i = 0; i < hPart; ++i)
+		{
+			trimesh::vec3 n = q * baseNormals[i];
+			trimesh::vec3 s = start + n * radius;
+			points.at(vertexIndex) = trimesh::vec3(s.x, s.y, s.z);
+			++vertexIndex;
+			trimesh::vec3 e = end + n * radius;
+			points.at(vertexIndex) = trimesh::vec3(e.x, e.y, e.z);
+			++vertexIndex;
+		}
+		mesh->vertices.swap(points);
+
+		auto fvindex = [&hPart](int layer, int index)->int {
+			return layer + 2 * index;
+		};
+
+		int faceIndex = 0;
+		for (int i = 0; i < hPart; ++i)
+		{
+			int v1 = fvindex(0, i);
+			int v2 = fvindex(1, i);
+			int v3 = fvindex(0, (i + 1) % hPart);
+			int v4 = fvindex(1, (i + 1) % hPart);
+
+			trimesh::TriMesh::Face& f1 = mesh->faces.at(faceIndex);
+			f1[0] = v1;
+			f1[1] = v3;
+			f1[2] = v2;
+			++faceIndex;
+			trimesh::TriMesh::Face& f2 = mesh->faces.at(faceIndex);
+			f2[0] = v2;
+			f2[1] = v3;
+			f2[2] = v4;
+			++faceIndex;
+		}
+
+		for (int i = 1; i < hPart - 1; ++i)
+		{
+			trimesh::TriMesh::Face& f1 = mesh->faces.at(faceIndex);
+			f1[0] = 0;
+			f1[1] = fvindex(0, i + 1);
+			f1[2] = fvindex(0, i);
+			++faceIndex;
+		}
+
+		for (int i = 1; i < hPart - 1; ++i)
+		{
+			trimesh::TriMesh::Face& f1 = mesh->faces.at(faceIndex);
+			f1[0] = 1;
+			f1[1] = fvindex(1, i);
+			f1[2] = fvindex(1, i + 1);
+			++faceIndex;
+		}
+
+		return mesh;
+	}
+
+	/// <summary>
+	/// 
+	/// </summary>
+	/// <param name="data"></param>
+	/// <param name="radius1"></param>
+	/// <param name="center1"></param>
+	/// <param name="radius2"></param>
+	/// <param name="center2"></param>
+	/// <param name="num"></param>
+	/// <param name="theta"></param>
+	void fillCylinderSoup(trimesh::vec3* data, float radius1, const trimesh::vec3& center1,
+		float radius2, const trimesh::vec3& center2, int num, float theta)
+	{
+		int hPart = num;
+
+		trimesh::vec3 dir = center2 - center1;
+		trimesh::normalize(dir);
+		trimesh::quaternion q = trimesh::quaternion::fromDirection(dir, trimesh::vec3(0.0f, 0.0f, 1.0f));
+
+		theta *= M_PIf / 180.0f;
+		float deltaTheta = M_PIf * 2.0f / (float)(hPart);
+		std::vector<float> cosValue;
+		std::vector<float> sinValue;
+		for (int i = 0; i < hPart; ++i)
+		{
+			cosValue.push_back(cosf(deltaTheta * (float)i + theta));
+			sinValue.push_back(sinf(deltaTheta * (float)i + theta));
+		}
+
+		std::vector<trimesh::vec3> baseNormals;
+		for (int i = 0; i < hPart; ++i)
+		{
+			baseNormals.push_back(trimesh::vec3(cosValue[i], sinValue[i], 0.0f));
+		}
+
+		int vertexNum = 2 * hPart;
+		std::vector<trimesh::vec3> points(vertexNum);
+		int faceNum = 4 * hPart - 4;
+
+		int vertexIndex = 0;
+		for (int i = 0; i < hPart; ++i)
+		{
+			trimesh::vec3 n = q * baseNormals[i];
+			trimesh::vec3 s = center1 + n * radius1;
+			points.at(vertexIndex) = trimesh::vec3(s.x, s.y, s.z);
+			++vertexIndex;
+			trimesh::vec3 e = center2 + n * radius2;
+			points.at(vertexIndex) = trimesh::vec3(e.x, e.y, e.z);
+			++vertexIndex;
+		}
+
+		auto fvindex = [&hPart](int layer, int index)->int {
+			return layer + 2 * index;
+		};
+
+		for (int i = 0; i < hPart; ++i)
+		{
+			int v1 = fvindex(0, i);
+			int v2 = fvindex(1, i);
+			int v3 = fvindex(0, (i + 1) % hPart);
+			int v4 = fvindex(1, (i + 1) % hPart);
+			*data++ = points.at(v1);
+			*data++ = points.at(v3);
+			*data++ = points.at(v2);
+			*data++ = points.at(v2);
+			*data++ = points.at(v3);
+			*data++ = points.at(v4);
+		}
+
+		for (int i = 1; i < hPart - 1; ++i)
+		{
+			*data++ = points.at(0);
+			*data++ = points.at(fvindex(0, i + 1));
+			*data++ = points.at(fvindex(0, i));
+		}
+
+		for (int i = 1; i < hPart - 1; ++i)
+		{
+			*data++ = points.at(1);
+			*data++ = points.at(fvindex(1, i));
+			*data++ = points.at(fvindex(1, i + 1));
+		}
 	}
 
 	/// <summary>

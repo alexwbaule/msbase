@@ -34,4 +34,14 @@ namespace msbase
 		for (trimesh::vec3& point : points)
 			point = xf * point;
 	}
+
+	void reverseTriMesh(trimesh::TriMesh* Mesh)
+	{
+		for (size_t i = 0; i < Mesh->faces.size(); i++)
+		{
+			int temp = Mesh->faces[i].at(1);
+			Mesh->faces[i].at(1) = Mesh->faces[i].at(2);
+			Mesh->faces[i].at(2) = temp;
+		}
+	}
 }

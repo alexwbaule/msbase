@@ -10,6 +10,8 @@ namespace msbase
 
 	MSBASE_API void offsetPoints(std::vector<trimesh::vec3>& points, const trimesh::vec3& offset);
 	MSBASE_API void applyMatrix2Points(std::vector<trimesh::vec3>& points, const trimesh::fxform& xf);
+
+	MSBASE_API void reverseTriMesh(trimesh::TriMesh* Mesh);
 }
 
 #endif // MSBASE_TINYMODIFY_1695183239576_H

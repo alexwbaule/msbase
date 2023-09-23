@@ -11,6 +11,11 @@ namespace msbase
 	MSBASE_API trimesh::fxform fromQuaterian(const trimesh::quaternion& q);
 
 	MSBASE_API trimesh::vec3 getFaceNormal(trimesh::TriMesh* mesh, int faceIndex);
+
+	inline trimesh::dvec3 vec32dvec3(const trimesh::vec3& v)
+	{
+		return trimesh::dvec3(v.x, v.y, v.z);
+	}
 }
 
 #endif // MSBASE_GET_1695188680764_H
