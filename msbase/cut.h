@@ -17,7 +17,10 @@ namespace msbase
 	};
 
 	MSBASE_API bool planeCut(trimesh::TriMesh* input, const CutPlane& plane,
-		std::vector<trimesh::TriMesh*>& outMeshes, const CutParam& param);
+		std::vector<trimesh::TriMesh*>& outMeshes, const CutParam& param = CutParam());
+
+	//ÇÐ¸îÇø¼ä
+	MSBASE_API bool splitRangeZ(trimesh::TriMesh* inputMesh, float Upz, float Dowmz, trimesh::TriMesh** mesh);
 }
 
 #endif // MMESH_BASE_CUT_1612341980784_H
