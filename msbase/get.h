@@ -16,6 +16,9 @@ namespace msbase
 	{
 		return trimesh::dvec3(v.x, v.y, v.z);
 	}
+
+	MSBASE_API float angleOfVector3D2(const trimesh::vec3& v1, const trimesh::vec3& v2);
+	MSBASE_API float radianOfVector3D2(const trimesh::vec3& v1, const trimesh::vec3& v2);
 }
 
 #endif // MSBASE_GET_1695188680764_H
