@@ -14,6 +14,7 @@ namespace msbase
 	MSBASE_API trimesh::vec3 centerBox(const trimesh::vec3& center, const std::vector<trimesh::box3>& boxes, bool ignoreZ = true);
 
 	MSBASE_API void reverseTriMesh(trimesh::TriMesh* Mesh);
+	MSBASE_API void fillTriangleSoupFaceIndex(trimesh::TriMesh* mesh);
 
 	MSBASE_API trimesh::fxform layMatrixFromPositionNormal(const trimesh::vec3& position, const trimesh::vec3& normal, const trimesh::vec3& scale, const trimesh::vec3& originNormal);
 	MSBASE_API trimesh::fxform layArrowMatrix(const trimesh::vec3& position, const trimesh::vec3& normal, const trimesh::vec3& scale);
