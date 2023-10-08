@@ -1,4 +1,5 @@
 #include "msbase/space/angle.h"
+#include <climits>
 
 namespace msbase {
 
