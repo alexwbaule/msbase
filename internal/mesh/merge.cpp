@@ -1,6 +1,6 @@
-#include "msbase/merge.h"
-#include "msbase/dumplicate.h"
-#include "msbase/meshtopo.h"
+#include "msbase/mesh/merge.h"
+#include "msbase/mesh/dumplicate.h"
+#include "msbase/utils/meshtopo.h"
 
 namespace msbase
 {

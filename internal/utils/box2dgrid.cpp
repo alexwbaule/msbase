@@ -1,5 +1,5 @@
-#include "msbase/box2dgrid.h"
-#include "msbase/intersect.h"
+#include "msbase/utils/box2dgrid.h"
+#include "msbase/space/intersect.h"
 
 #include <unordered_map>
 #include <float.h>

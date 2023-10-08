@@ -1,5 +1,5 @@
 #include "trianglesplit.h"
-#include "poly/polygonstack.h"
+#include "internal/poly/polygonstack.h"
 #include "uniformpoints.h"
 
 #include "trimesh2/Vec3Utils.h"

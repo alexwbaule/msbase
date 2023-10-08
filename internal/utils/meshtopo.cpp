@@ -1,5 +1,5 @@
-#include "msbase/meshtopo.h"
-#include "msbase/intersect.h"
+#include "msbase/utils/meshtopo.h"
+#include "msbase/space/intersect.h"
 
 using namespace trimesh;
 namespace msbase

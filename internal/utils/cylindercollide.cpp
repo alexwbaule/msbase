@@ -1,10 +1,12 @@
 #include "cylindercollide.h"
 
-#include "msbase/get.h"
-#include "msbase/intersect.h"
-#include "msbase/merge.h"
-#include "msbase/dumplicate.h"
-#include "msbase/tinymodify.h"
+#include "msbase/mesh/get.h"
+#include "msbase/space/intersect.h"
+#include "msbase/mesh/merge.h"
+#include "msbase/mesh/dumplicate.h"
+#include "msbase/mesh/tinymodify.h"
+#include "msbase/space/angle.h"
+#include "msbase/data/conv.h"
 
 #include "trimesh2/Vec3Utils.h"
 #include "uniformpoints.h"

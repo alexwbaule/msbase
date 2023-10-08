@@ -1,4 +1,4 @@
-#include "msbase/dumplicate.h"
+#include "msbase/mesh/dumplicate.h"
 
 #include "trimesh2/TriMesh_algo.h"
 #include <unordered_map>

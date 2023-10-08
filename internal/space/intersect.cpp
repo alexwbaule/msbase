@@ -1,4 +1,4 @@
-#include "msbase/intersect.h"
+#include "msbase/space/intersect.h"
 
 namespace msbase
 {

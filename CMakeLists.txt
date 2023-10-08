@@ -14,5 +14,6 @@ else()
     list(APPEND LIBS ${CMAKE_THREAD_LIBS_INIT})
 endif()
 
+set(MSBASE_STATIC 1)
 set(INTERFACE_DEFS USE_MSBASE)
 __add_common_library(msbase OPENMP)

@@ -1,10 +1,11 @@
-#include "msbase/cylinder.h"
+#include "msbase/primitive/cylinder.h"
 #include "trimesh2/TriMesh_algo.h"
 
-#include "msbase/get.h"
-#include "msbase/merge.h"
-#include "msbase/dumplicate.h"
-#include "msbase/tinymodify.h"
+#include "msbase/data/conv.h"
+#include "msbase/mesh/get.h"
+#include "msbase/mesh/merge.h"
+#include "msbase/mesh/dumplicate.h"
+#include "msbase/mesh/tinymodify.h"
 
 #define  PI 3.141592 
 

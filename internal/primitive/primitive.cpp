@@ -1,4 +1,4 @@
-#include "msbase/primitive.h"
+#include "msbase/primitive/primitive.h"
 #include "trimesh2/quaternion.h"
 
 namespace msbase
