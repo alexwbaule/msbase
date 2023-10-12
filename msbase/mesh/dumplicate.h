@@ -7,6 +7,8 @@
 namespace msbase
 {
 	MSBASE_API bool dumplicateMesh(trimesh::TriMesh* mesh, ccglobal::Tracer* tracer = nullptr);
+
+	MSBASE_API bool mergeNearPoints(trimesh::TriMesh* mesh, ccglobal::Tracer* tracer = nullptr, float eps = 1E-8F);
 }
 
 #endif // MMESH_MNODE_DUMPLICATE_1622032440408_H
