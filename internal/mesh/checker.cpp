@@ -1,4 +1,7 @@
 #include "msbase/mesh/checker.h"
+#include <assert.h>
+
+#include <queue>
 
 namespace msbase
 {
@@ -40,4 +43,71 @@ namespace msbase
 		}
 		return have;
 	}
+
+    void checkLargetPlanar(trimesh::TriMesh* mesh, const std::vector<trimesh::vec3>& normals, const std::vector<float>& areas, float threshold,
+        /*out*/std::vector<int>& faces)
+    {
+        if (!mesh)
+            return;
+
+        assert(mesh->faces.size() == normals.size());
+        assert(mesh->faces.size() == areas.size());
+        assert(mesh->across_edge.size() == mesh->faces.size());
+
+        const size_t facenums = mesh->faces.size();
+        std::vector<int> sequence(facenums);
+        for (int i = 0; i < facenums; ++i) {
+            sequence[i] = i;
+        }
+
+        std::vector<trimesh::TriMesh::Face>  mffaces = mesh->across_edge;
+
+        std::vector<int> masks(facenums, 1);
+        std::vector<std::vector<int>> selectFaces;
+        selectFaces.reserve(facenums);
+        for (const auto& f : sequence) {
+            if (masks[f]) {
+                const auto& nf = normals[f];
+                std::vector<int>currentFaces;
+                std::queue<int>currentQueue;
+                currentQueue.emplace(f);
+                currentFaces.emplace_back(f);
+                masks[f] = false;
+                while (!currentQueue.empty()) {
+                    auto& fr = currentQueue.front();
+                    currentQueue.pop();
+                    const trimesh::TriMesh::Face& neighbor = mffaces[fr];
+                    for (const auto& fa : neighbor) {
+                        if (fa < 0) continue;
+                        if (masks[fa]) {
+                            const auto& na = normals[fa];
+                            const auto& nr = normals[fr];
+                            if ((nr DOT na) > threshold && (nf DOT na) > threshold) {
+                                currentQueue.emplace(fa);
+                                currentFaces.emplace_back(fa);
+                                masks[fa] = 0;
+                            }
+                        }
+                    }
+                }
+                selectFaces.emplace_back(std::move(currentFaces));
+            }
+        }
+
+        //
+        double maxArea = 0.0f;
+        std::vector<int> resultFaces;
+        for (auto& fs : selectFaces) {
+            double currentArea = 0.0;
+            for (const auto& f : fs) {
+                currentArea += areas[f];
+            }
+            if (currentArea > maxArea) {
+                maxArea = currentArea;
+                resultFaces.swap(fs);
+            }
+        }
+        
+        faces = resultFaces;
+    }
 }

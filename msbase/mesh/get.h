@@ -5,7 +5,10 @@
 
 namespace msbase
 {
-	MSBASE_API trimesh::vec3 getFaceNormal(trimesh::TriMesh* mesh, int faceIndex);
+	MSBASE_API trimesh::vec3 getFaceNormal(trimesh::TriMesh* mesh, int faceIndex, bool normalized = true);
+
+	MSBASE_API void calculateFaceNormalOrAreas(trimesh::TriMesh* mesh, 
+		/*out*/std::vector<trimesh::vec3>& normals, std::vector<float>* areas = nullptr);
 }
 
 #endif // MSBASE_GET_1695188680764_H
