@@ -145,12 +145,13 @@ namespace msbase
 
         mesh->vertices.swap(omesh->vertices);
         mesh->faces.swap(omesh->faces);
-        mesh->flags.clear();
 
         if (needScale)
             trimesh::apply_xform(mesh, trimesh::xform::scale(1.0f / sValue));
 
-        mesh->flags.clear();
+        if (mesh->flags.size() != mesh->faces.size())
+            mesh->flags.clear();
+
         mesh->clear_bbox();
         mesh->need_bbox();
 
