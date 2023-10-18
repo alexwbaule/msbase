@@ -16,6 +16,8 @@ namespace msbase
 
 	MSBASE_API std::vector<std::vector<BaseMeshPtr>> meshSplit(const std::vector<BaseMeshPtr>& meshes
 		, ccglobal::Tracer* tracer = nullptr);
+
+	MSBASE_API trimesh::TriMesh* mergeColorMeshes(trimesh::TriMesh* sourceMesh, const std::vector<std::string>& color2Facets);
 }
 
 #endif // MSBASE_MERGE_1695441390758_H
