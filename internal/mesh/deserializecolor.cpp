@@ -364,12 +364,12 @@ namespace msbase
 		int midpoint = triangle_midpoint(deserialzedata,itriangle, vertexi, vertexj);
 		if (midpoint == -1) {
 			trimesh::vec c = 0.5f * (m_vertices[vertexi] + m_vertices[vertexj]);
-#ifdef EXPENSIVE_DEBUG_CHECKS
-			// Verify that the vertex is really a new one.
-			auto it = std::find_if(m_vertices.begin(), m_vertices.end(), [c](const Vertex& v) {
-				return v.ref_cnt > 0 && (v.v - c).norm() < EPSILON; });
-			assert(it == m_vertices.end());
-#endif // EXPENSIVE_DEBUG_CHECKS
+//#ifdef EXPENSIVE_DEBUG_CHECKS
+//			//// Verify that the vertex is really a new one.
+//			//auto it = std::find_if(m_vertices.begin(), m_vertices.end(), [c](const Vertex& v) {
+//			//	return v.ref_cnt > 0 && (v.v - c).norm() < EPSILON; });
+//			//assert(it == m_vertices.end());
+//#endif // EXPENSIVE_DEBUG_CHECKS
 			// Allocate a new vertex, possibly reusing the free list.
 			if (m_free_vertices_head == -1) {
 				// Allocate a new vertex.

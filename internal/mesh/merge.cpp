@@ -269,4 +269,16 @@ namespace msbase
 
 		return outMeshes;
 	}
+
+	void copyTrimesh2Trimesh(trimesh::TriMesh* source, trimesh::TriMesh* dest)
+	{
+		if (source && dest)
+		{
+			dest->vertices = source->vertices;
+			dest->faces = source->faces;
+			dest->bbox = source->bbox;
+			dest->flags = source->flags;
+
+		}
+	}
 }
