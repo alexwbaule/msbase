@@ -6,7 +6,7 @@
 
 namespace msbase
 {
-	MSBASE_API trimesh::TriMesh* mergeColorMeshes(trimesh::TriMesh* sourceMesh, const std::vector<std::string>& color2Facets, ccglobal::Tracer* tracer = nullptr);
+	MSBASE_API trimesh::TriMesh* mergeColorMeshes(trimesh::TriMesh* sourceMesh, const std::vector<std::string>& color2Facets, std::vector<int>& facet2Facets, ccglobal::Tracer* tracer = nullptr);
 }
 
 #endif // MSBASE_DESERIALIZECOLOR_1695441390758_H

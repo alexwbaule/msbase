@@ -820,7 +820,7 @@ namespace msbase
 		return newMesh;
 	}
 #endif
-    trimesh::TriMesh* mergeColorMeshes(trimesh::TriMesh* sourceMesh, const std::vector<std::string>& color2Facets, ccglobal::Tracer* tracer)
+    trimesh::TriMesh* mergeColorMeshes(trimesh::TriMesh* sourceMesh, const std::vector<std::string>& color2Facets, std::vector<int>& facet2Facets, ccglobal::Tracer* tracer)
 	{
 		if (!sourceMesh)
 			return nullptr;
@@ -864,15 +864,17 @@ namespace msbase
 
  		deserialzedata.mesh->faces.clear(); 
 		deserialzedata.mesh->flags.clear();
+		facet2Facets.clear();
 		deserialzedata.mesh->faces.reserve(deserialzedata.m_triangles.size());
 		deserialzedata.mesh->flags.reserve(deserialzedata.m_triangles.size());
-
+		facet2Facets.reserve(deserialzedata.m_triangles.size());
 		for (auto& triangle : deserialzedata.m_triangles)
 		{
 			if (!triangle.is_split())
 			{
 				deserialzedata.mesh->faces.push_back(trimesh::TriMesh::Face(triangle.verts_idxs[0], triangle.verts_idxs[1],triangle.verts_idxs[2]));
 				deserialzedata.mesh->flags.push_back((int)triangle.get_state());
+				facet2Facets.push_back(triangle.source_triangle);
 			}
 		}
 
