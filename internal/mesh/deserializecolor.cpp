@@ -575,7 +575,10 @@ namespace msbase
 			auto next_nibble = [&data, &ibit = ibit]() {
 				int n = 0;
 				for (int i = 0; i < 4; ++i)
-					n |= data.second[ibit++] << i;
+					if (ibit < data.second.size())
+					{
+						n |= data.second[ibit++] << i;
+					}			
 				return n;
 			};
 
