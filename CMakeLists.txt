@@ -1,3 +1,5 @@
+__enable_cxx17()
+
 __cc_find(trimesh2)
 
 __assert_target(trimesh2)
