@@ -35,4 +35,13 @@ namespace msbase {
 #endif
 		return (float)angle;
 	}
+
+	trimesh::vec3 triangleNormal(const trimesh::vec3& v1, const trimesh::vec3& v2, const trimesh::vec3& v3)
+	{
+		trimesh::vec3 v01 = v2 - v1;
+		trimesh::vec3 v02 = v3 - v1;
+		trimesh::vec3 n = v01 TRICROSS v02;
+		trimesh::normalize(n);
+		return n;
+	}
 }
