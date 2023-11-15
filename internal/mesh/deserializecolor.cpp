@@ -455,7 +455,7 @@ namespace msbase
 		{
 			size_t num_triangles_new = m_triangles.size() + m_triangles[facet_idx].number_of_split_sides() + 1;
 			if (m_triangles.capacity() < num_triangles_new)
-				m_triangles.reserve(next_highest_power_of_2(num_triangles_new));
+				m_triangles.reserve(next_highest_power_of_2((uint64_t)num_triangles_new));
 		}
 
 		Triangle& tr = m_triangles[facet_idx];
@@ -685,7 +685,7 @@ namespace msbase
 			ExtruderMax
 		};
 
-		/* color2Facets×Ö·û´®×ª¶þ½øÖÆÐòÁÐ */
+		/* color2Facetsï¿½Ö·ï¿½ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 		std::pair<std::vector<std::pair<int, int>>, std::vector<bool>> data;
 		for (int i = 0, count = color2Facets.size(); i < count; ++i)
 		{
