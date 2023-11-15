@@ -23,7 +23,7 @@ namespace msbase
             needScale = true;
             scale = 100.0f / size.max();
         }
-        else if (size.min() < 1.0f && size.min() > 0.00001f)
+        else if (size.max() < 1.0f && size.max() > 0.00001f)
         {
             needScale = true;
             scale = 100.0f / size.min();
