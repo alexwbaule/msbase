@@ -790,12 +790,16 @@ namespace msbase
 	bool getColorPloygon(trimesh::TriMesh* sourceMesh, const trimesh::xform& _xform, const std::vector<std::string>& color2Facets,
 		const std::string& fileName, int state, ccglobal::Tracer* tracer)
 	{
-		if (!sourceMesh)
+		if (!sourceMesh || color2Facets.empty())
 			return false;
 
 		std::vector<int> facet2Facets;
 		std::shared_ptr<trimesh::TriMesh> _mesh(mergeColorMeshes(sourceMesh, color2Facets, facet2Facets,true, state));
 		
+		if (_mesh->vertices.size() == sourceMesh->vertices.size()
+			&& _mesh->faces.size() == sourceMesh->faces.size())
+			return false;
+
 		//_mesh->write("d:/color.stl");
 		_mesh->need_bbox();
 		_mesh->need_normals();
