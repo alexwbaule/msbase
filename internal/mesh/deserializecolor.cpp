@@ -1,7 +1,10 @@
 #include "msbase/mesh/deserializecolor.h"
 
+#include "trimesh2/TriMesh_algo.h"
 #include <assert.h>
 #include <array>
+#include <memory>
+#include <map>
 
 namespace msbase
 {
@@ -658,183 +661,20 @@ namespace msbase
 		}
 
 	}
-#if 0
-	trimesh::TriMesh* mergeColorMeshes1(trimesh::TriMesh* sourceMesh, const std::vector<std::string>& color2Facets, ccglobal::Tracer* tracer)
-	{
-		enum class EnforcerBlockerType : int8_t {
-			// Maximum is 3. The value is serialized in TriangleSelector into 2 bits.
-			NONE = 0,
-			ENFORCER = 1,
-			BLOCKER = 2,
-			// Maximum is 15. The value is serialized in TriangleSelector into 6 bits using a 2 bit prefix code.
-			Extruder1 = ENFORCER,
-			Extruder2 = BLOCKER,
-			Extruder3,
-			Extruder4,
-			Extruder5,
-			Extruder6,
-			Extruder7,
-			Extruder8,
-			Extruder9,
-			Extruder10,
-			Extruder11,
-			Extruder12,
-			Extruder13,
-			Extruder14,
-			Extruder15,
-			ExtruderMax
-		};
 
-		/* color2Facets�ַ���ת���������� */
-		std::pair<std::vector<std::pair<int, int>>, std::vector<bool>> data;
-		for (int i = 0, count = color2Facets.size(); i < count; ++i)
-		{
-			std::string str = color2Facets[i];
-			if (str.empty())
-				continue;
-
-			data.first.emplace_back(i, int(data.second.size()));
-			for (auto it = str.crbegin(); it != str.crend(); ++it) {
-				const char ch = *it;
-				int dec = 0;
-				if (ch >= '0' && ch <= '9')
-					dec = int(ch - '0');
-				else if (ch >= 'A' && ch <= 'F')
-					dec = 10 + int(ch - 'A');
-				else
-					assert(false);
-
-				// Convert to binary and append into code.
-				for (int i = 0; i < 4; ++i)
-					data.second.insert(data.second.end(), bool(dec & (1 << i)));
-			}
-		}
-		data.first.shrink_to_fit();
-		data.second.shrink_to_fit();
-
-		/* copy newMesh */
-		trimesh::TriMesh* newMesh = new trimesh::TriMesh();
-		int verticeCount = sourceMesh->vertices.size();
-		newMesh->vertices.resize(verticeCount);
-		for (int i = 0; i < verticeCount; ++i)
-			newMesh->vertices[i] = sourceMesh->vertices[i];
-
-		int faceCount = sourceMesh->faces.size();
-		newMesh->faces.resize(faceCount);
-		for (int i = 0; i < faceCount; ++i)
-			newMesh->faces[i] = sourceMesh->faces[i];
-
-		newMesh->flags.resize(sourceMesh->faces.size());
-
-		/* deserialize */
-		// Vector to store all parents that have offsprings.
-		struct ProcessingInfo {
-			int facet_id = 0;
-			trimesh::vec3 neighbors{ -1, -1, -1 };
-			int processed_children = 0;
-			int total_children = 0;
-		};
-
-		// Depth-first queue of a source mesh triangle and its childern.
-		// kept outside of the loop to avoid re-allocating inside the loop.
-		std::vector<ProcessingInfo> parents;
-
-		for (std::pair<int, int> d : data.first) {
-			int triangle_id = d.first, ibit = d.second;
-			assert(triangle_id < int(newMesh->faces.size()));
-			assert(ibit < int(data.second.size()));
-			auto next_nibble = [&data, &ibit = ibit]() {
-				int n = 0;
-				for (int i = 0; i < 4; ++i)
-					n |= data.second[ibit++] << i;
-				return n;
-			};
-
-			parents.clear();
-			while (true) {
-				// Read next triangle info.
-				int code = next_nibble();
-				int num_of_split_sides = code & 0b11;
-				int num_of_children = num_of_split_sides == 0 ? 0 : num_of_split_sides + 1;
-				bool is_split = num_of_children != 0;
-				// Only valid if not is_split. Value of the second nibble was subtracted by 3, so it is added back.
-				auto state = is_split ? EnforcerBlockerType::NONE : EnforcerBlockerType((code & 0b1100) == 0b1100 ? next_nibble() + 3 : code >> 2);
-
-				// BBS
-				if (state > EnforcerBlockerType::ExtruderMax)
-					state = EnforcerBlockerType::NONE;
-
-				// Only valid if is_split.
-				int special_side = code >> 2;
-
-				// Take care of the first iteration separately, so handling of the others is simpler.
-				if (parents.empty()) {
-					// if (is_split) {
-					// 	// root is split, add it into list of parents and split it.
-					// 	// then go to the next.
-					// 	Vec3i neighbors = m_neighbors[triangle_id];
-					// 	parents.push_back({triangle_id, neighbors, 0, num_of_children});
-					// 	m_triangles[triangle_id].set_division(num_of_split_sides, special_side);
-					// 	perform_split(triangle_id, neighbors, EnforcerBlockerType::NONE);
-					// 	continue;
-					// } else {
-						// root is not split. just set the state and that's it.
-					newMesh->flags[triangle_id] = (int)state;
-					break;
-					// }
-				}
-
-				// // This is not the first iteration. This triangle is a child of last seen parent.
-				// assert(! parents.empty());
-				// assert(parents.back().processed_children < parents.back().total_children);
-
-				// if (ProcessingInfo& last = parents.back();  is_split) {
-				// 	// split the triangle and save it as parent of the next ones.
-				// 	const Triangle &tr = m_triangles[last.facet_id];
-				// 	int   child_idx = last.total_children - last.processed_children - 1;
-				// 	Vec3i neighbors = this->child_neighbors(tr, last.neighbors, child_idx);
-				// 	int this_idx = tr.children[child_idx];
-				// 	m_triangles[this_idx].set_division(num_of_split_sides, special_side);
-				// 	perform_split(this_idx, neighbors, EnforcerBlockerType::NONE);
-				// 	parents.push_back({this_idx, neighbors, 0, num_of_children});
-				// } else {
-				// 	// this triangle belongs to last split one
-				// 	int child_idx = last.total_children - last.processed_children - 1;
-				// 	m_triangles[m_triangles[last.facet_id].children[child_idx]].set_state(state);
-				// 	++last.processed_children;
-				// }
-
-				// // If all children of the past parent triangle are claimed, move to grandparent.
-				// while (parents.back().processed_children == parents.back().total_children) {
-				// 	parents.pop_back();
-
-				// 	if (parents.empty())
-				// 		break;
-
-				// 	// And increment the grandparent children counter, because
-				// 	// we have just finished that branch and got back here.
-				// 	++parents.back().processed_children;
-				// }
-
-				// // In case we popped back the root, we should be done.
-				// if (parents.empty())
-				// 	break;
-			}
-		}
-		return newMesh;
-	}
-#endif
-    trimesh::TriMesh* mergeColorMeshes(trimesh::TriMesh* sourceMesh, const std::vector<std::string>& color2Facets, std::vector<int>& facet2Facets, ccglobal::Tracer* tracer)
+	trimesh::TriMesh* mergeColorMeshes(trimesh::TriMesh* sourceMesh, const std::vector<std::string>& color2Facets,
+		std::vector<int>& facet2Facets, bool onlyFlags, int state, ccglobal::Tracer* tracer)
 	{
 		if (!sourceMesh)
-			return nullptr;
-		if(sourceMesh->faces.size() != color2Facets.size())
 			return nullptr;
 
 		DeserialzeData deserialzedata;
 		trimesh::TriMesh* meshNew = new trimesh::TriMesh();
 		meshNew->vertices = sourceMesh->vertices;
 		meshNew->faces = sourceMesh->faces;
+
+		if (sourceMesh->faces.size() != color2Facets.size())
+			return meshNew;
 
 		//init
 		deserialzedata.mesh = meshNew;
@@ -845,7 +685,6 @@ namespace msbase
 		//deserialzedata.m_neighbors;
 		deserialzedata.mesh->need_normals();
 		deserialzedata.mesh->need_across_edge();
-		deserialzedata.mesh->across_edge;
 
 		//deserialzedata.m_triangles;
 		for (size_t i = 0; i < sourceMesh->faces.size(); i++)
@@ -876,13 +715,94 @@ namespace msbase
 		{
 			if (!triangle.is_split())
 			{
-				deserialzedata.mesh->faces.push_back(trimesh::TriMesh::Face(triangle.verts_idxs[0], triangle.verts_idxs[1],triangle.verts_idxs[2]));
-				deserialzedata.mesh->flags.push_back((int)triangle.get_state());
+
+				if (onlyFlags)
+				{
+					if ((int)triangle.get_state()  == state)
+					{
+						deserialzedata.mesh->faces.push_back(trimesh::TriMesh::Face(triangle.verts_idxs[0], triangle.verts_idxs[1], triangle.verts_idxs[2]));
+						deserialzedata.mesh->flags.push_back((int)triangle.get_state());
+					}
+				}
+				else
+				{
+					deserialzedata.mesh->faces.push_back(trimesh::TriMesh::Face(triangle.verts_idxs[0], triangle.verts_idxs[1], triangle.verts_idxs[2]));
+					deserialzedata.mesh->flags.push_back((int)triangle.get_state());
+				}
+
 				facet2Facets.push_back(triangle.source_triangle);
 			}
 		}
 
 		//deserialzedata.mesh->write("d:/deserial.stl");
 		return deserialzedata.mesh;
+	}
+
+	void writePoly(trimesh::TriMesh* sourceMesh, const std::string& fileName)
+	{
+		if (!sourceMesh)
+			return;
+
+		int face = sourceMesh->faces.size();
+		int v = sourceMesh->vertices.size();
+		std::fstream out(fileName, std::ios::out | std::ios::binary | std::ios::app);
+		if (out.is_open() && face > 0)
+		{
+			out.write((char*)&face, sizeof(int));
+			if (face > 0)
+			{
+				for (int i = 0; i < face; ++i)
+				{
+					int num = 3;
+					out.write((char*)&num, sizeof(int));
+					for (int j = 0; j < num; j++)
+					{
+						out.write((char*)&sourceMesh->faces[i][j], sizeof(int));
+					}
+				}
+			}
+
+			out.write((char*)&v, sizeof(int));
+			if (v > 0)
+			{
+				for (int i = 0; i < v; ++i)
+				{
+					int num = 3;
+					out.write((char*)&num, sizeof(int));
+					for (int j = 0; j < num; j++)
+					{
+						out.write((char*)&sourceMesh->vertices[i][j], sizeof(float));
+					}
+				}
+			}
+
+			out.close();
+		}
+	}
+
+
+	//void resetFile(const std::string& fileName)
+	//{
+	//	std::ofstream file_writer(fileName, std::ios_base::out);
+	//}
+
+
+	bool getColorPloygon(trimesh::TriMesh* sourceMesh, const trimesh::xform& _xform, const std::vector<std::string>& color2Facets,
+		const std::string& fileName, int state, ccglobal::Tracer* tracer)
+	{
+		if (!sourceMesh)
+			return false;
+
+		std::vector<int> facet2Facets;
+		std::shared_ptr<trimesh::TriMesh> _mesh(mergeColorMeshes(sourceMesh, color2Facets, facet2Facets,true, state));
+		
+		//_mesh->write("d:/color.stl");
+		_mesh->need_bbox();
+		_mesh->need_normals();
+		trimesh::apply_xform(_mesh.get(), _xform);
+
+		writePoly(_mesh.get(), fileName);
+
+		return true;
 	}
 }
