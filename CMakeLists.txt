@@ -19,3 +19,7 @@ endif()
 set(MSBASE_STATIC 1)
 set(INTERFACE_DEFS USE_MSBASE)
 __add_common_library(msbase OPENMP)
+
+if(CC_INSTALL_MSBASE)
+	__install_directory_specif(${CMAKE_CURRENT_SOURCE_DIR}/msbase msbase)
+endif()
