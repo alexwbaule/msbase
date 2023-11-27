@@ -96,6 +96,25 @@ namespace msbase
 			cxndSaveVectorT(out, polys.at(i));
 	}
 
+    void loadFacePatchs(std::fstream& in, CXNDFacePatchs& facePatchs)
+    {
+        int size = 0;
+        cxndLoadT(in, size);
+        if (size > 0) {
+            facePatchs.resize(size);
+            for (int i = 0; i < size; ++i)
+                cxndLoadVectorT(in, facePatchs.at(i));
+        }
+    }
+
+    void saveFacePatchs(std::fstream & out, const CXNDFacePatchs& facePatchs)
+    {
+        int size = (int)facePatchs.size();
+        cxndSaveT(out, size);
+        for (int i = 0; i < size; ++i)
+            cxndSaveVectorT(out, facePatchs.at(i));
+    }
+
 	CXNDPolygonsWrapper::CXNDPolygonsWrapper()
 	{
 
@@ -126,4 +145,34 @@ namespace msbase
 		}
 		return false;
 	}
+
+    CXNDFacePatchsWrapper::CXNDFacePatchsWrapper()
+    {
+
+    }
+
+    CXNDFacePatchsWrapper::~CXNDFacePatchsWrapper()
+    {
+
+    }
+
+    int CXNDFacePatchsWrapper::version()
+    {
+        return 0;
+    }
+
+    bool CXNDFacePatchsWrapper::save(std::fstream& out, ccglobal::Tracer* tracer)
+    {
+        saveFacePatchs(out, facePatchs);
+        return true;
+    }
+
+    bool CXNDFacePatchsWrapper::load(std::fstream& in, int ver, ccglobal::Tracer* tracer)
+    {
+        if (ver == 0) {
+            loadFacePatchs(in, facePatchs);
+            return true;
+        }
+        return false;
+    }
 }
