@@ -55,4 +55,42 @@ namespace msbase
 			trimesh::normalize(n);
 		}
 	}
+
+
+	double count_triangle_area(const trimesh::point& a, const trimesh::point& b, const trimesh::point& c) {
+		double area = -1;
+
+		double side[3];
+
+		side[0] = sqrt(pow(a.x - b.x, 2) + pow(a.y - b.y, 2) + pow(a.z - b.z, 2));
+		side[1] = sqrt(pow(a.x - c.x, 2) + pow(a.y - c.y, 2) + pow(a.z - c.z, 2));
+		side[2] = sqrt(pow(c.x - b.x, 2) + pow(c.y - b.y, 2) + pow(c.z - b.z, 2));
+
+		if (side[0] + side[1] <= side[2] || side[0] + side[2] <= side[1] || side[1] + side[2] <= side[0]) return area;
+
+		double p = (side[0] + side[1] + side[2]) / 2;
+		area = sqrt(p * (p - side[0]) * (p - side[1]) * (p - side[2]));
+
+		return area;
+	}
+
+	double getFacetArea(trimesh::TriMesh* mesh, int facetId)
+	{
+		if (!mesh || mesh->faces.size() == 0)
+		{
+			return 0.0f;
+		}
+
+		double s = 0.0f;
+		std::vector<trimesh::point>& vs = mesh->vertices;
+		if (mesh->faces.size() <= facetId)
+			return 0.0f;
+
+		trimesh::TriMesh::Face& face = mesh->faces[facetId];
+
+		if (vs.size() <= face[0] || vs.size() <= face[1] || vs.size() <= face[2])
+			return 0.0f;
+
+		return count_triangle_area(vs[face[0]], vs[face[1]], vs[face[2]]);
+	}
 }

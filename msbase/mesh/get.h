@@ -9,6 +9,9 @@ namespace msbase
 
 	MSBASE_API void calculateFaceNormalOrAreas(trimesh::TriMesh* mesh, 
 		/*out*/std::vector<trimesh::vec3>& normals, std::vector<float>* areas = nullptr);
+
+	//get one facet area
+	MSBASE_API double getFacetArea(trimesh::TriMesh* mesh, int facetId);
 }
 
 #endif // MSBASE_GET_1695188680764_H

@@ -1,7 +1,10 @@
 #include "msbase/mesh/merge.h"
 #include "msbase/mesh/dumplicate.h"
 #include "msbase/utils/meshtopo.h"
+#include "msbase/mesh/get.h"
 #include <assert.h>
+
+#define MIN_AREA 10
 
 namespace msbase
 {
@@ -218,13 +221,26 @@ namespace msbase
 			}
 
 			std::vector<trimesh::TriMesh*> meshes;
-			size_t partSize = parts.size();
-			for (size_t i = 0; i < partSize; ++i)
+			int partSize = parts.size();
+			for (int i = 0; i < partSize; ++i)
 			{
 				if (parts.at(i).size() > 10)
 				{
 					trimesh::TriMesh* outMesh = partMesh(parts.at(i), mesh.get());
 					if (outMesh) meshes.push_back(outMesh);
+				}
+				else
+				{
+					double s = 0.0f;
+					for (int j = 0; j < parts.at(i).size(); j++)
+					{
+						s += msbase::getFacetArea(mesh.get(), parts[i][j]);
+					}
+					if (s > MIN_AREA)
+					{
+						trimesh::TriMesh* outMesh = partMesh(parts.at(i), mesh.get());
+						if (outMesh) meshes.push_back(outMesh);
+					}
 				}
 			}
 
