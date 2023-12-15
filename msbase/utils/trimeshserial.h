@@ -15,6 +15,14 @@ namespace msbase
     struct CXNDGeometry {
         CXNDPolygon contour;
         CXNDPolygons holes;
+        CXNDGeometry() {}
+        CXNDGeometry(const CXNDPolygon& con) :contour(con) {}
+        CXNDGeometry(const CXNDPolygon& con, const CXNDPolygons ho) :contour(con), holes(ho) {}
+        ~CXNDGeometry()
+        {
+            contour.clear();
+            holes.clear();
+        }
     };
     typedef std::vector<CXNDGeometry> CXNDGeometrys;
 
