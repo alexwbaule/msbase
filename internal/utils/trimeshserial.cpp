@@ -76,7 +76,17 @@ namespace msbase
 		}
 	}
 
-	void loadPolys(std::fstream& in, CXNDPolygons& polys)
+    void loadPoly(std::fstream& in, CXNDPolygon& poly)
+    {
+        cxndLoadVectorT(in, poly);
+    }
+
+    void savePoly(std::fstream& out, const CXNDPolygon& poly)
+    {
+        cxndSaveVectorT(out, poly);
+    }
+
+    void loadPolys(std::fstream& in, CXNDPolygons& polys)
 	{
 		int size = 0;
 		cxndLoadT(in, size);
@@ -96,6 +106,37 @@ namespace msbase
 			cxndSaveVectorT(out, polys.at(i));
 	}
 
+    void loadGeometry(std::fstream& in, CXNDGeometry& geometry)
+    {
+        loadPoly(in, geometry.contour);
+        loadPolys(in, geometry.holes);
+    }
+
+    void saveGeometry(std::fstream& out, const CXNDGeometry& geometry)
+    {
+        savePoly(out, geometry.contour);
+        savePolys(out, geometry.holes);
+    }
+
+    void loadGeometrys(std::fstream& in, CXNDGeometrys& geometrys)
+    {
+        int size = 0;
+        cxndLoadT(in, size);
+        if (size > 0) {
+            geometrys.resize(size);
+            for (int i = 0; i < size; ++i)
+                loadGeometry(in, geometrys.at(i));
+        }
+    }
+
+    void saveGeometrys(std::fstream& out, const CXNDGeometrys& geometrys)
+    {
+        int size = (int)geometrys.size();
+        cxndSaveT(out, size);
+        for (int i = 0; i < size; ++i)
+            saveGeometry(out, geometrys.at(i));
+    }
+
     void loadFacePatchs(std::fstream& in, CXNDFacePatchs& facePatchs)
     {
         int size = 0;
@@ -113,6 +154,33 @@ namespace msbase
         cxndSaveT(out, size);
         for (int i = 0; i < size; ++i)
             cxndSaveVectorT(out, facePatchs.at(i));
+    }
+
+    CXNDPolygonWrapper::CXNDPolygonWrapper()
+    {
+    }
+    CXNDPolygonWrapper::~CXNDPolygonWrapper()
+    {
+    }
+
+    int CXNDPolygonWrapper::version()
+    {
+        return 0;
+    }
+
+    bool CXNDPolygonWrapper::save(std::fstream& out, ccglobal::Tracer* tracer)
+    {
+        savePoly(out, poly);
+        return true;
+    }
+
+    bool CXNDPolygonWrapper::load(std::fstream& in, int ver, ccglobal::Tracer* tracer)
+    {
+        if (ver == 0) {
+            loadPoly(in, poly);
+            return true;
+        }
+        return false;
     }
 
 	CXNDPolygonsWrapper::CXNDPolygonsWrapper()
@@ -146,6 +214,34 @@ namespace msbase
 		return false;
 	}
 
+    CXNDGeometryWrapper::CXNDGeometryWrapper()
+    {
+    }
+
+    CXNDGeometryWrapper::~CXNDGeometryWrapper()
+    {
+    }
+
+    int CXNDGeometryWrapper::version()
+    {
+        return 0;
+    }
+
+    bool CXNDGeometryWrapper::save(std::fstream& out, ccglobal::Tracer* tracer)
+    {
+        saveGeometry(out, geometry);
+        return true;
+    }
+
+    bool CXNDGeometryWrapper::load(std::fstream& in, int ver, ccglobal::Tracer* tracer)
+    {
+        if (ver == 0) {
+            loadGeometry(in, geometry);
+            return true;
+        }
+        return false;
+    }
+
     CXNDFacePatchsWrapper::CXNDFacePatchsWrapper()
     {
 
@@ -175,4 +271,33 @@ namespace msbase
         }
         return false;
     }
+    
+    CXNDGeometrysWrapper::CXNDGeometrysWrapper()
+    {
+    }
+
+    CXNDGeometrysWrapper::~CXNDGeometrysWrapper()
+    {
+    }
+
+    int CXNDGeometrysWrapper::version()
+    {
+        return 0;
+    }
+
+    bool CXNDGeometrysWrapper::save(std::fstream& out, ccglobal::Tracer* tracer)
+    {
+        saveGeometrys(out, geometrys);
+        return true;
+    }
+
+    bool CXNDGeometrysWrapper::load(std::fstream& in, int ver, ccglobal::Tracer* tracer)
+    {
+        if (ver == 0) {
+            loadGeometrys(in, geometrys);
+            return true;
+        }
+        return false;
+    }
+
 }
