@@ -1,5 +1,5 @@
 #include "msbase/utils/flushvolume.h"
-
+#define M_PI       3.14159265358979323846   // pi
 namespace msbase
 {
     //static const int m_max_flush_volume = 750.f;
