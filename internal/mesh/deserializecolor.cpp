@@ -662,6 +662,62 @@ namespace msbase
 
 	}
 
+	trimesh::TriMesh* change_all_triangles_state(trimesh::TriMesh* sourceMesh, const std::vector<std::string>& color2Facets,
+		int ori_state, int dest_state)
+	{
+		if (!sourceMesh)
+			return nullptr;
+
+		DeserialzeData deserialzedata;
+		trimesh::TriMesh* meshNew = new trimesh::TriMesh();
+		meshNew->vertices = sourceMesh->vertices;
+		meshNew->faces = sourceMesh->faces;
+
+		if (sourceMesh->faces.size() != color2Facets.size())
+			return meshNew;
+
+		deserialzedata.mesh = meshNew;
+		std::vector<int> ref_cnt(meshNew->vertices.size(), 0);
+		deserialzedata.m_ref_cnt = ref_cnt;
+		deserialzedata.m_invalid_triangles = 0;
+
+		//deserialzedata.m_neighbors;
+		deserialzedata.mesh->need_normals();
+		deserialzedata.mesh->need_across_edge();
+
+		for (size_t i = 0; i < sourceMesh->faces.size(); i++)
+		{
+			trimesh::TriMesh::Face& face = deserialzedata.mesh->faces[i];
+			if (!color2Facets[i].empty())
+				set_triangle_from_string(deserialzedata.m_data, i, color2Facets[i]);
+
+			trimesh::TriMesh::Face& neighbor = deserialzedata.mesh->across_edge[i];
+			deserialzedata.m_neighbors.push_back(std::vector<int>{neighbor.z, neighbor.x, neighbor.y});
+			deserialzedata.m_triangles.push_back(Triangle(face.at(0), face.at(1), face.at(2), i, EnforcerBlockerType::NONE));
+		}
+
+		deserialize(deserialzedata);
+
+		deserialzedata.mesh->faces.clear();
+		deserialzedata.mesh->flags.clear();
+	
+		deserialzedata.mesh->faces.reserve(deserialzedata.m_triangles.size());
+		deserialzedata.mesh->flags.reserve(deserialzedata.m_triangles.size());
+
+		for (auto& triangle : deserialzedata.m_triangles)
+		{
+			if (!triangle.is_split())
+			{
+				if ((int)triangle.get_state() == ori_state)
+				{
+					deserialzedata.mesh->faces.push_back(trimesh::TriMesh::Face(triangle.verts_idxs[0], triangle.verts_idxs[1], triangle.verts_idxs[2]));
+					deserialzedata.mesh->flags.push_back(dest_state);
+				}
+			}
+		}
+		return deserialzedata.mesh;
+	}
+
 	trimesh::TriMesh* mergeColorMeshes(trimesh::TriMesh* sourceMesh, const std::vector<std::string>& color2Facets,
 		std::vector<int>& facet2Facets, bool onlyFlags, int state, ccglobal::Tracer* tracer)
 	{
