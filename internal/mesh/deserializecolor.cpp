@@ -850,9 +850,11 @@ namespace msbase
 		//data.second.clear();
 		//data.second = copy_data;
 	
-		for (int i = 0; i < color2Facets.size(); i++)
+		int stringsize = color2Facets.size();
+		color2Facets.clear();
+		for (int i = 0; i < stringsize; i++)
 		{
-			get_triangle_as_string(data,i);
+			color2Facets.push_back(get_triangle_as_string(data,i));
 		}
 
 		return true;
