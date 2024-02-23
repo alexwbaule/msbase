@@ -754,6 +754,11 @@ namespace msbase
 				}
 				if (n != 0)
 					continue;
+				n = 0;
+				for (int bbi = bi+2, li = 0; bbi < bi+4; bbi++, li++)
+				{
+					n |= data.second[bbi] << li;
+				}
 				int nn = n;
 				if (nn == 3)
 				{
@@ -763,20 +768,28 @@ namespace msbase
 					{
 						n |= data.second[bbi] << li;
 					}
-
+					n += nn;
 				}
-				if (n == ori_state)
-				{					
-					for (int bbi = bi - 4; bbi < bi - 2; bbi++)
+				if (n == ori_state+1)
+				{	
+					if (n >= 3)
 					{
-						data.second[bbi] = 0;
-					}					
-					if(nn==3)
-					{
+						for (int bbi = bi - 2; bbi < bi; bbi++)
+						{
+							data.second[bbi] = 0;
+						}					
+					
 						for (int bbi = bi; bbi < bi + 4; bbi++)
 						{
 							del_data[bbi] = true;
 							del_n++;
+						}
+					}
+					else
+					{
+						for (int bbi = bi+2; bbi < bi + 4; bbi++)
+						{
+							data.second[bbi] = 0;
 						}
 					}
 				}
@@ -800,6 +813,8 @@ namespace msbase
 			data.first[di].second = data.first[di].second - del_n_c[di];
 		}
 
+
+		
 
 		//for (auto [triangle_id, ibit] : data.first) {
 		//	auto next_nibble = [&data, &ibit = ibit]() {
@@ -854,7 +869,10 @@ namespace msbase
 		color2Facets.clear();
 		for (int i = 0; i < stringsize; i++)
 		{
-			color2Facets.push_back(get_triangle_as_string(data,i));
+			std::string s = get_triangle_as_string(data, i);
+			if (s == "0"|| s == "00")
+				s = "";
+			color2Facets.emplace_back(s);
 		}
 
 		return true;
