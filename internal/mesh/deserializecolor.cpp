@@ -713,7 +713,7 @@ namespace msbase
 				if ((dec & 0x3) == 0)
 				{
 					int color = dec & 12;
-					if (color < 3)
+					if (color < 12)
 					{
 						if (color == input_state)
 						{
@@ -724,7 +724,7 @@ namespace msbase
 							new_state.insert(new_state.begin(), ch);
 						}
 					}
-					else if (color >= 3)
+					else if (color >= 12)
 					{
 						it++;
 						const char next_ch = *it;
