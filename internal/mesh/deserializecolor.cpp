@@ -691,190 +691,78 @@ namespace msbase
 
 	}
 
-	bool change_all_triangles_state(trimesh::TriMesh* sourceMesh,  std::vector<std::string>& color2Facets,
-		int ori_state, int dest_state)
-	{
-		if (!sourceMesh)
+	bool change_all_triangles_state(std::vector<std::string>& color2Facets,
+		int ori_state)
+	{			
+		if (color2Facets.empty())
 			return false;
-
-		DeserialzeData deserialzedata;
-		trimesh::TriMesh* meshNew = new trimesh::TriMesh();
-		meshNew->vertices = sourceMesh->vertices;
-		meshNew->faces = sourceMesh->faces;
-
-		if (sourceMesh->faces.size() != color2Facets.size())
-			return false;
-
-		deserialzedata.mesh = meshNew;
-		std::vector<int> ref_cnt(meshNew->vertices.size(), 0);
-		deserialzedata.m_ref_cnt = ref_cnt;
-		deserialzedata.m_invalid_triangles = 0;
-
-		//deserialzedata.m_neighbors;
-		deserialzedata.mesh->need_normals();
-		deserialzedata.mesh->need_across_edge();
-
-		
-
-		for (size_t i = 0; i < sourceMesh->faces.size(); i++)
+		const int input_state = ori_state + 1;
+		std::vector<std::string> m_state;
+		for (std::string& str : color2Facets)
 		{
-			trimesh::TriMesh::Face& face = deserialzedata.mesh->faces[i];
-			if (!color2Facets[i].empty())
+			std::string new_state;
+			for (auto it = str.crbegin(); it != str.crend(); ++it) 
 			{
-				set_triangle_from_string(deserialzedata.m_data, i, color2Facets[i]);
-				//auto [triangle_id, ibit] = deserialzedata.m_data.first.back();
-			}			
-		}
-		std::pair<std::vector<std::pair<int, int>>, std::vector<bool>>& data = deserialzedata.m_data;
-		std::vector<bool> parent;
-		std::vector<bool> copy_data = data.second;
-		std::vector<bool> del_data(data.second.size(),false);
-		std::vector<int> del_n_c(data.first.size(), 0);
+				const char ch = *it;
+				int dec = 0;
+				if (ch >= '0' && ch <= '9')
+					dec = int(ch - '0');
+				else if (ch >= 'A' && ch <= 'F')
+					dec = 10 + int(ch - 'A');
 
-		for (int di = 0; di < data.first.size(); di++)
-		{
-			auto [triangle_id, ibit] = data.first[di];
-			int next_ibit = 0;
-			if (di != data.first.size() - 1)
-			{
-				next_ibit = data.first[di + 1].second;
-			}
-			else
-			{
-				next_ibit = data.second.size();
-			}
-			
-			int del_n = 0;
-			for (int bi = ibit; bi < next_ibit; bi+=4)
-			{
-				int n = 0;
-				for (int bbi = bi,li=0; bbi < bi+2; bbi++,li++)
+				if ((dec & 0x3) == 0)
 				{
-					n |= data.second[bbi] << li;
-				}
-				if (n != 0)
-					continue;
-				n = 0;
-				for (int bbi = bi+2, li = 0; bbi < bi+4; bbi++, li++)
-				{
-					n |= data.second[bbi] << li;
-				}
-				int nn = n;
-				if (nn == 3)
-				{
-					bi += 4;
-					n = 0;
-					for (int bbi = bi, li = 0; bbi < bi + 4; bbi++, li++)
+					int color = dec & 12;
+					if (color < 3)
 					{
-						n |= data.second[bbi] << li;
-					}
-					n += nn;
-				}
-				if (n == ori_state+1)
-				{	
-					if (n >= 3)
-					{
-						for (int bbi = bi - 2; bbi < bi; bbi++)
+						if (color == input_state)
 						{
-							data.second[bbi] = 0;
-						}					
-					
-						for (int bbi = bi; bbi < bi + 4; bbi++)
+							new_state.insert(new_state.begin(), '0');
+						}
+						else
 						{
-							del_data[bbi] = true;
-							del_n++;
+							new_state.insert(new_state.begin(), ch);
 						}
 					}
-					else
+					else if (color >= 3)
 					{
-						for (int bbi = bi+2; bbi < bi + 4; bbi++)
+						it++;
+						const char next_ch = *it;
+						int next_dec = 0;
+						if (next_ch >= '0' && next_ch <= '9')
+							next_dec = int(next_ch - '0');
+						else if (next_ch >= 'A' && next_ch <= 'F')
+							next_dec = 10 + int(next_ch - 'A');
+
+						color = 3 + next_dec;
+						if (color == input_state)
 						{
-							data.second[bbi] = 0;
+							new_state.insert(new_state.begin(), '0');
 						}
+						else
+						{
+							new_state.insert(new_state.begin(), ch);
+							new_state.insert(new_state.begin(), next_ch);
+						}
+
 					}
 				}
+				else
+				{
+					new_state.insert(new_state.begin(), ch);
+				}
+
 			}
-			del_n_c[di] = del_n;
+			m_state.push_back(new_state);
 		}
 
-		for (int deli = del_data.size()-1; deli >=0; deli--)
+		for (std::string& str : m_state)
 		{
-			if (del_data[deli])
-				data.second.erase(data.second.begin() + deli);
+			if (str == "0" || str == "00")
+				str = "";
 		}
-
-		for (int di = 1; di < del_n_c.size(); di++)
-		{
-			del_n_c[di] = del_n_c[di] + del_n_c[di - 1];
-		}
-
-		for (int di = 1; di < data.first.size(); di++)
-		{
-			data.first[di].second = data.first[di].second - del_n_c[di];
-		}
-
-
-		
-
-		//for (auto [triangle_id, ibit] : data.first) {
-		//	auto next_nibble = [&data, &ibit = ibit]() {
-		//		int n = 0;
-		//		for (int i = 0; i < 4; ++i)
-		//			if (ibit < data.second.size())
-		//			{
-		//				n |= data.second[ibit++] << i;
-		//			}
-		//		return n;
-		//	};
-		//	parent.clear();
-		//	while (true)
-		//	{
-		//		int code = next_nibble();
-		//		int num_of_split_sides = code & 0b11;
-		//		int num_of_children = num_of_split_sides == 0 ? 0 : num_of_split_sides + 1;
-		//		bool is_split = num_of_children != 0;
-		//		
-		//		auto state = is_split ? EnforcerBlockerType::NONE : EnforcerBlockerType((code & 0b1100) == 0b1100 ? next_nibble() + 3 : code >> 2);
-		//		if (parent.empty()) {
-		//			if (is_split) {												
-		//				parent.push_back(true);						
-		//				continue;
-		//			}
-		//			else {						
-		//				if ((int)state == ori_state)
-		//				{
-		//					//data.second.erase(data.second.begin() + ibit, data.second.begin() + ibit + 4);
-		//					int n = 0;
-		//					for (int i = 0; i < 2; i++)
-		//					{
-		//						n |= copy_data[ibit + i] << i;
-		//						copy_data[ibit + i] = 0;
-		//					}
-		//					
-		//					if (n == 3)
-		//					{
-		//						copy_data.erase(copy_data.begin()+ibit+4,copy_data.begin()+ibit+8);
-		//					}
-		//
-		//				}
-		//				break;
-		//			}
-		//		};
-		//	}
-		//}
-		//data.second.clear();
-		//data.second = copy_data;
-	
-		int stringsize = color2Facets.size();
 		color2Facets.clear();
-		for (int i = 0; i < stringsize; i++)
-		{
-			std::string s = get_triangle_as_string(data, i);
-			if (s == "0"|| s == "00")
-				s = "";
-			color2Facets.emplace_back(s);
-		}
-
+		color2Facets = m_state;
 		return true;
 	}
 
