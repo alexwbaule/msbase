@@ -715,6 +715,7 @@ namespace msbase
 					int color = dec & 12;
 					if (color < 12)
 					{
+						color = color >> 2;
 						if (color == input_state)
 						{
 							new_state.insert(new_state.begin(), '0');
