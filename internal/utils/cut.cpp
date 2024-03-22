@@ -4,7 +4,7 @@
 
 #include "trimesh2/XForm.h"
 #include "trimesh2/Vec3Utils.h"
-
+#include <unordered_map>
 #include "internal/poly/polygonstack.h"
 #include <cfloat>
 #include <queue>
