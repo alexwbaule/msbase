@@ -1,4 +1,6 @@
 ﻿#include "msbase/utils/cut.h"
+#include "ccglobal/serial.h"
+#include "msbase/utils/trimeshserial.h"
 #include <list>
 #include <map>
 
@@ -11,6 +13,48 @@
 
 namespace msbase
 {
+	class CutInput : public ccglobal::Serializeable {
+	public:
+		trimesh::TriMesh* mesh = nullptr;
+		CutPlane plane;
+		CutParam param;
+		float Upz = 0.0f;
+		float Downz = 0.0f;
+
+		CutInput() {}
+		~CutInput() {}
+
+		int version() override
+		{
+			return 0;
+		}
+		bool save(std::fstream& out, ccglobal::Tracer* tracer) override
+		{
+			msbase::saveTrimesh(out, *mesh);
+			ccglobal::cxndSaveT(out, plane.normal);
+			ccglobal::cxndSaveT(out, plane.position);
+			ccglobal::cxndSaveT(out, Upz);
+			ccglobal::cxndSaveT(out, Downz);
+			ccglobal::cxndSaveT(out, param.fillHole);
+			ccglobal::cxndSaveStr(out, param.fileName);
+			return true;
+		}
+		bool load(std::fstream& in, int ver, ccglobal::Tracer* tracer) override
+		{
+			if (ver == 0) {
+				msbase::loadTrimesh(in, *mesh);
+				ccglobal::cxndLoadT(in, plane.normal);
+				ccglobal::cxndLoadT(in, plane.position);
+				ccglobal::cxndLoadT(in, Upz);
+				ccglobal::cxndLoadT(in, Downz);
+				ccglobal::cxndLoadT(in, param.fillHole);
+				ccglobal::cxndLoadStr(in, param.fileName);
+				return true;
+			}
+			return false;
+		}
+	};
+
 	struct segment
 	{
 		int start;
@@ -825,6 +869,13 @@ namespace msbase
 	bool planeCut(trimesh::TriMesh* input, const CutPlane& plane,
 		std::vector<trimesh::TriMesh*>& outMeshes, const CutParam& param)
 	{
+		if (!param.fileName.empty()) {
+			CutInput cutInput;
+			cutInput.mesh = input;
+			cutInput.plane = plane;
+			cutInput.param = param;
+			ccglobal::cxndSave(cutInput, param.fileName);
+		}
 		outMeshes.clear();
 		trimesh::TriMesh* m1 = new trimesh::TriMesh();
 		trimesh::TriMesh* m2 = new trimesh::TriMesh();
@@ -842,8 +893,16 @@ namespace msbase
 		return false;
 	}
 
-	bool splitRangeZ(trimesh::TriMesh* inputMesh, float Upz, float Dowmz, trimesh::TriMesh** mesh)
+	bool splitRangeZ(trimesh::TriMesh* inputMesh, float Upz, float Dowmz, trimesh::TriMesh** mesh, const char* fileName)
 	{
+		if (fileName != nullptr) {
+			CutInput cutInput;
+			cutInput.mesh = inputMesh;
+			cutInput.Upz = Upz;
+			cutInput.Downz = Dowmz;
+			std::string filePath(fileName);
+			ccglobal::cxndSave(cutInput, filePath);
+		}
 		trimesh::vec3 normalUp = trimesh::vec3(0.0f, 0.0f, 1.0f);
 		trimesh::vec3 normalDown = trimesh::vec3(0.0f, 0.0f, -1.0f);
 
@@ -880,5 +939,25 @@ namespace msbase
 			mesh2 = nullptr;
 		}
 		return true;
+	}
+	
+	bool planeCutFromFile(const std::string& fileName, std::vector<trimesh::TriMesh*>& outMeshes)
+	{
+		CutInput cutInput;
+		if (!ccglobal::cxndLoad(cutInput, fileName)) {
+			LOGE("planeCutFromFile load error [%s]", fileName.c_str());
+			return false;
+		}
+		return planeCut(cutInput.mesh, cutInput.plane, outMeshes, cutInput.param);
+	}
+	
+	bool splitRangeZFromFile(const std::string& fileName, trimesh::TriMesh** mesh)
+	{
+		CutInput cutInput;
+		if (!ccglobal::cxndLoad(cutInput, fileName)) {
+			LOGE("splitRangeZFromFile load error [%s]", fileName.c_str());
+			return false;
+		}
+		return splitRangeZ(cutInput.mesh, cutInput.Upz, cutInput.Downz, mesh);
 	}
 }
