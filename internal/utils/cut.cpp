@@ -1,6 +1,7 @@
 ﻿#include "msbase/utils/cut.h"
 #include "ccglobal/serial.h"
 #include "msbase/utils/trimeshserial.h"
+#include "msbase/mesh/dumplicate.h"
 #include <list>
 #include <map>
 
@@ -640,16 +641,16 @@ namespace msbase
 				seg.b = resSegments.front().a;
 				resSegments.emplace_back(seg);
 			}
-			for (auto it = resSegments.begin(); it != resSegments.end(); ++it) {
-				if (std::next(it) != resSegments.end()) {
-					const auto& curLine = *it;
-					const auto& nextLine = *std::next(it);
-					if (curLine.b != nextLine.a) {
-						Segment seg;
-						seg.a = curLine.b;
-						seg.b = nextLine.a;
-						it = resSegments.insert(it + 1, seg);
-					}
+			for (auto it = resSegments.begin(); it != std::prev(resSegments.end());) {
+				const auto& curLine = *it;
+				const auto& nextLine = *std::next(it);
+				if (curLine.b != nextLine.a) {
+					Segment seg;
+					seg.a = curLine.b;
+					seg.b = nextLine.a;
+					it = resSegments.insert(std::next(it), seg);
+				} else {
+					++it;
 				}
 			}
 			for (const auto& s : resSegments) {
@@ -883,6 +884,8 @@ namespace msbase
 				plane.position.x, plane.position.y, param.fillHole);
 		if (result)
 		{
+			msbase::dumplicateMesh(m1);
+			msbase::dumplicateMesh(m2);
 			outMeshes.push_back(m1);
 			outMeshes.push_back(m2);
 			return true;
@@ -926,6 +929,7 @@ namespace msbase
 		{
 			*mesh = new trimesh::TriMesh();
 			**mesh = *mesh2;
+			msbase::dumplicateMesh(*mesh);
 		}
 
 		if (mesh1 != nullptr)
