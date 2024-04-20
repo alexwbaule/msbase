@@ -128,7 +128,7 @@ namespace msbase
         if (mesh->flags.size() != mesh->faces.size())
             mesh->flags.clear();
         
-        msbase::checkDegenerateFace(mesh, true);
+        //msbase::checkDegenerateFace(mesh, true);
         mesh->clear_bbox();
         mesh->need_bbox();
 
