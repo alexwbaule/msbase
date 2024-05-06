@@ -13,6 +13,24 @@ namespace msbase
 	{
 		return trimesh::dvec3(v.x, v.y, v.z);
 	}
+
+	inline void checkVec3Range(trimesh::dvec3& v, const trimesh::dvec3& minscope, const trimesh::dvec3& maxscope)
+	{
+		for (int i = 0; i < 3; i++)
+		{
+			if (v[i] > maxscope[i])
+			{
+				v[i] = maxscope[i];
+			}
+			if (v[i] < minscope[i])
+			{
+				v[i] = minscope[i];
+			}
+		}
+
+	}
+
+	MSBASE_API trimesh::dvec3 transFromXform(const trimesh::xform& xf);
 }
 
 #endif // MSBASE_GET_CONV_1695188680764_H

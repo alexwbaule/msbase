@@ -25,4 +25,10 @@ namespace msbase {
 		trimesh::transpose(m);
 		return m;
 	}
+
+	trimesh::dvec3 transFromXform(const trimesh::xform& xf)
+	{
+		trimesh::dvec3 v;
+		return v;
+	}
 }
