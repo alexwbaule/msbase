@@ -31,6 +31,8 @@ namespace msbase
 	}
 
 	MSBASE_API trimesh::dvec3 transFromXform(const trimesh::xform& xf);
+
+	MSBASE_API bool checkValid(const trimesh::xform& xf);
 }
 
 #endif // MSBASE_GET_CONV_1695188680764_H

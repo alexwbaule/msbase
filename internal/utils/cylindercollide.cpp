@@ -326,9 +326,7 @@ namespace msbase
 		int meshNum = (int)focusFaces.size();
 		std::vector<std::vector<bool>> vctInner;
 		vctInner.resize(meshNum, std::vector<bool>(3,true));
-#if _DEBUG
-		int debug_index = 0;
-#endif
+
 		for (int i = 0; i < meshNum; ++i)
 		{
 			trimesh::TriMesh::Face& face = focusFaces.at(i);

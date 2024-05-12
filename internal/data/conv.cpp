@@ -31,4 +31,10 @@ namespace msbase {
 		trimesh::dvec3 v;
 		return v;
 	}
+
+	bool checkValid(const trimesh::xform& xf)
+	{
+		bool valid = xf[15] != 0.0;
+		return valid;
+	}
 }

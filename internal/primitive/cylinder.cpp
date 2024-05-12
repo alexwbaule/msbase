@@ -362,10 +362,8 @@ namespace msbase
 	}
 	trimesh::TriMesh* createHollowCylinder(trimesh::TriMesh* wallOutter, trimesh::TriMesh* wallInner, int sectionCount, const trimesh::vec3& normal)
 	{
-
 		//mmesh::reverseTriMesh(cylinderMeshInner);
 		int vertexsizeOutter = wallOutter->vertices.size();
-		int vertexsizeInner = wallInner->vertices.size();
 
 		std::vector<trimesh::TriMesh*> meshes;
 		meshes.push_back(wallOutter);
