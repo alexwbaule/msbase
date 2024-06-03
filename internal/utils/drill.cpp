@@ -69,7 +69,7 @@ namespace msbase
 			return nullptr;
 		}
 
-		OptimizeCylinderCollide cylinderCollider(mesh, param.cylinder_resolution, param.cylinder_radius, param.cylinder_depth, param.cylinder_startPos, param.cylinder_Dir, tracer, debugger);
+		OptimizeCylinderCollide cylinderCollider(mesh, param.cylinder_resolution, param.cylinder_radius, param.cylinder_depth, param.cylinder_startPos, param.cylinder_Dir, param.bottomOffset, tracer, debugger);
 
 		if (!cylinderCollider.valid())
 		{

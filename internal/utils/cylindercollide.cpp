@@ -627,6 +627,7 @@ namespace msbase
 		, cylinderTriangles(0)
 		, m_cylinderRadius(0.0f)
 		, m_cylinderDepth(0.0f)
+		, m_bottomOffset(1.0f)
 	{
 		m_cylinder = new trimesh::TriMesh();
 		*m_cylinder = *cylinder;
@@ -635,7 +636,7 @@ namespace msbase
 	}
 	
 	OptimizeCylinderCollide::OptimizeCylinderCollide(trimesh::TriMesh* mesh,
-		int resolution, double radius, double depth, trimesh::point pointStart, trimesh::point dir,
+		int resolution, double radius, double depth, trimesh::point pointStart, trimesh::point dir, float bottomOffset,
 		ccglobal::Tracer* tracer, DrillDebugger* debugger)
 		:m_mesh(mesh)
 		, m_cylinder(nullptr)
@@ -648,6 +649,7 @@ namespace msbase
 		, m_cylinderDepth(depth)
 		, m_cylinderPointStart(pointStart)
 		, m_cylinderDir(dir)
+		, m_bottomOffset(bottomOffset)
 	{
 		if (m_mesh && m_mesh->faces.size() > 0)
 			mycalculate();
@@ -773,7 +775,7 @@ namespace msbase
 
 		trimesh::fxform xf = msbase::fromQuaterian(quat);
 
-		m_cylinderPointStart = m_cylinderPointStart + 1.0f * (-m_cylinderDir);
+		m_cylinderPointStart = m_cylinderPointStart + m_bottomOffset * (-m_cylinderDir);
 		m_mesh->need_bbox();
 		
 		trimesh::vec3 newStartPos = xf * m_cylinderPointStart;
