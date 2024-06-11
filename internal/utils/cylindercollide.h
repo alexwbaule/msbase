@@ -38,7 +38,7 @@ namespace msbase
 
 		// depth 设置为小于等于 0 时，则打洞只打穿一层壁，若大于 0，则打穿指定深度内的所有壁
 		OptimizeCylinderCollide(trimesh::TriMesh* mesh,
-			int resolution, double radius, double depth, trimesh::point pointStart, trimesh::point dir, float bottomOffset,
+			int resolution, double radius, double depth, trimesh::point pointStart, trimesh::point dir, float bottomOffset, bool mirrorFlag,
 			ccglobal::Tracer* tracer, DrillDebugger* debugger);
 		~OptimizeCylinderCollide();
 
@@ -83,6 +83,7 @@ namespace msbase
 		trimesh::point m_cylinderPointStart;
 		trimesh::point m_cylinderDir;
 		float m_bottomOffset;
+		bool m_mirrorFlag;
 	};
 
 	trimesh::TriMesh* getNewMesh(trimesh::TriMesh* mesh,

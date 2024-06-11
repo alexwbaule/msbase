@@ -628,6 +628,7 @@ namespace msbase
 		, m_cylinderRadius(0.0f)
 		, m_cylinderDepth(0.0f)
 		, m_bottomOffset(1.0f)
+		, m_mirrorFlag(false)
 	{
 		m_cylinder = new trimesh::TriMesh();
 		*m_cylinder = *cylinder;
@@ -636,7 +637,7 @@ namespace msbase
 	}
 	
 	OptimizeCylinderCollide::OptimizeCylinderCollide(trimesh::TriMesh* mesh,
-		int resolution, double radius, double depth, trimesh::point pointStart, trimesh::point dir, float bottomOffset,
+		int resolution, double radius, double depth, trimesh::point pointStart, trimesh::point dir, float bottomOffset, bool mirrorFlag,
 		ccglobal::Tracer* tracer, DrillDebugger* debugger)
 		:m_mesh(mesh)
 		, m_cylinder(nullptr)
@@ -650,6 +651,7 @@ namespace msbase
 		, m_cylinderPointStart(pointStart)
 		, m_cylinderDir(dir)
 		, m_bottomOffset(bottomOffset)
+		, m_mirrorFlag(mirrorFlag)
 	{
 		if (m_mesh && m_mesh->faces.size() > 0)
 			mycalculate();
@@ -837,6 +839,8 @@ namespace msbase
 			cylinderNormals.at(j) = normalized(n);
 		}
 
+		float mirrorDir = 1.0f;
+		mirrorDir = m_mirrorFlag ? -1.0f : 1.0f;
 		for (int j = 0; j < focusTriangle; ++j)
 		{
 			TriMesh::Face& focusFace = meshFocusFaces.at(j);
@@ -846,7 +850,7 @@ namespace msbase
 			vec3& meshV3 = m_mesh->vertices.at(focusFace[2]);
 
 			vec3 n = (meshV2 - meshV1) TRICROSS(meshV3 - meshV1);
-			focusNormals.at(j) = normalized(n);
+			focusNormals.at(j) = normalized(mirrorDir * n);
 		}
 
 		SAFE_TRACER(m_tracer, "OptimizeCylinderCollide meshFocus [%d], cylinder [%d]",
@@ -904,7 +908,11 @@ namespace msbase
 			if (isIntersected)
 			{
 				trimesh::vec3 faceNormal = trimesh::normalized((m_mesh->vertices[face[1]] - m_mesh->vertices[face[0]]) TRICROSS(m_mesh->vertices[face[2]] - m_mesh->vertices[face[0]]));
-				directionFlagMap[faceIndex] = faceNormal.dot(m_cylinderDir) < 0;
+
+				if(m_mirrorFlag)
+					directionFlagMap[faceIndex] = faceNormal.dot(-m_cylinderDir) < 0;
+				else
+					directionFlagMap[faceIndex] = faceNormal.dot(m_cylinderDir) < 0;
 
 				trimesh::vec3 vertices1 = m_mesh->vertices[face[0]];
 				trimesh::vec3 vertices2 = m_mesh->vertices[face[1]];
