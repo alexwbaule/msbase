@@ -38,7 +38,7 @@ namespace msbase
 
 		// depth 设置为小于等于 0 时，则打洞只打穿一层壁，若大于 0，则打穿指定深度内的所有壁
 		OptimizeCylinderCollide(trimesh::TriMesh* mesh,
-			int resolution, double radius, double depth, trimesh::point pointStart, trimesh::point dir, float bottomOffset, bool mirrorFlag,
+			int resolution, double radius, double depth, trimesh::point pointStart, trimesh::point dir, float bottomOffset,
 			ccglobal::Tracer* tracer, DrillDebugger* debugger);
 		~OptimizeCylinderCollide();
 
@@ -51,7 +51,9 @@ namespace msbase
 		void calculate();
 		void mycalculate();
 
-		double getDrillDepth();
+		std::vector<trimesh::point> getCirclePerimeterPoint(const trimesh::point& centerPoint, const trimesh::vec3& dir, double radius, int num);
+		double getDrillDepth(const trimesh::point& checkPoint);
+		double getMaxDrillDepth();
 		bool lineCollideTriangle(trimesh::dvec3 linePos, trimesh::dvec3 lineDir, trimesh::dvec3 A, trimesh::dvec3 B, trimesh::dvec3 C, trimesh::dvec3& intersectedPos);
 
 		trimesh::TriMesh* postProcess(trimesh::TriMesh* Mout, trimesh::TriMesh* Cin);
@@ -83,7 +85,6 @@ namespace msbase
 		trimesh::point m_cylinderPointStart;
 		trimesh::point m_cylinderDir;
 		float m_bottomOffset;
-		bool m_mirrorFlag;
 	};
 
 	trimesh::TriMesh* getNewMesh(trimesh::TriMesh* mesh,

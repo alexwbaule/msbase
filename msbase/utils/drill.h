@@ -31,7 +31,6 @@ namespace msbase
 		trimesh::vec3 cylinder_startPos;          //  打洞起点的世界坐标
 		trimesh::vec3 cylinder_Dir;
 		float bottomOffset = 1.0f;
-		bool mirrorFlag = false;
 	};
 
 	MSBASE_API trimesh::TriMesh* drill(trimesh::TriMesh* mesh, trimesh::TriMesh* cylinderMesh,

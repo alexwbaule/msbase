@@ -628,7 +628,6 @@ namespace msbase
 		, m_cylinderRadius(0.0f)
 		, m_cylinderDepth(0.0f)
 		, m_bottomOffset(1.0f)
-		, m_mirrorFlag(false)
 	{
 		m_cylinder = new trimesh::TriMesh();
 		*m_cylinder = *cylinder;
@@ -637,7 +636,7 @@ namespace msbase
 	}
 	
 	OptimizeCylinderCollide::OptimizeCylinderCollide(trimesh::TriMesh* mesh,
-		int resolution, double radius, double depth, trimesh::point pointStart, trimesh::point dir, float bottomOffset, bool mirrorFlag,
+		int resolution, double radius, double depth, trimesh::point pointStart, trimesh::point dir, float bottomOffset,
 		ccglobal::Tracer* tracer, DrillDebugger* debugger)
 		:m_mesh(mesh)
 		, m_cylinder(nullptr)
@@ -651,7 +650,6 @@ namespace msbase
 		, m_cylinderPointStart(pointStart)
 		, m_cylinderDir(dir)
 		, m_bottomOffset(bottomOffset)
-		, m_mirrorFlag(mirrorFlag)
 	{
 		if (m_mesh && m_mesh->faces.size() > 0)
 			mycalculate();
@@ -813,7 +811,7 @@ namespace msbase
 		}
 
 		// 确定打孔实际深度，生成圆柱体网格
-		m_cylinderDepth = getDrillDepth();
+		m_cylinderDepth = getMaxDrillDepth();
 		if (m_cylinderDepth <= 0)
 			return;
 
@@ -839,8 +837,6 @@ namespace msbase
 			cylinderNormals.at(j) = normalized(n);
 		}
 
-		float mirrorDir = 1.0f;
-		mirrorDir = m_mirrorFlag ? -1.0f : 1.0f;
 		for (int j = 0; j < focusTriangle; ++j)
 		{
 			TriMesh::Face& focusFace = meshFocusFaces.at(j);
@@ -850,7 +846,7 @@ namespace msbase
 			vec3& meshV3 = m_mesh->vertices.at(focusFace[2]);
 
 			vec3 n = (meshV2 - meshV1) TRICROSS(meshV3 - meshV1);
-			focusNormals.at(j) = normalized(mirrorDir * n);
+			focusNormals.at(j) = normalized(n);
 		}
 
 		SAFE_TRACER(m_tracer, "OptimizeCylinderCollide meshFocus [%d], cylinder [%d]",
@@ -890,7 +886,46 @@ namespace msbase
 		}
 	}
 
-	double OptimizeCylinderCollide::getDrillDepth()
+	// get "num" circle perimeter point, for checking the maximum drill depth
+	std::vector<trimesh::point> OptimizeCylinderCollide::getCirclePerimeterPoint(const trimesh::point& centerPoint, const trimesh::vec3& dir, double radius, int num)
+	{
+		int hPart = num;
+
+		trimesh::vec3 tmpDir = dir;
+		trimesh::normalize(tmpDir);
+		trimesh::quaternion q = trimesh::quaternion::fromDirection(tmpDir, trimesh::vec3(0.0f, 0.0f, 1.0f));
+
+		float deltaTheta = M_PIf * 2.0f / (float)(hPart);
+		std::vector<float> cosValue;
+		std::vector<float> sinValue;
+		for (int i = 0; i < hPart; ++i)
+		{
+			cosValue.push_back(std::cos(deltaTheta * (float)i ));
+			sinValue.push_back(std::sin(deltaTheta * (float)i ));
+		}
+
+		std::vector<trimesh::vec3> baseNormals;
+		for (int i = 0; i < hPart; ++i)
+		{
+			baseNormals.push_back(trimesh::vec3(cosValue[i], sinValue[i], 0.0f));
+		}
+
+		int vertexNum = hPart;
+		std::vector<trimesh::point> points(vertexNum);
+
+		int vertexIndex = 0;
+		for (int i = 0; i < hPart; ++i)
+		{
+			trimesh::vec3 n = q * baseNormals[i];
+			trimesh::vec3 s = centerPoint + n * radius;
+			points.at(vertexIndex) = trimesh::vec3(s.x, s.y, s.z);
+			++vertexIndex;
+		}
+
+		return points;
+	}
+
+	double OptimizeCylinderCollide::getDrillDepth(const trimesh::point& checkPoint)
 	{
 		// focus 集合与打洞方向向量求交，并确定三角面到打洞起点的距离，以及法线与打洞方向是否同向
 		float t, u, v;
@@ -899,31 +934,27 @@ namespace msbase
 		std::map<int, bool> directionFlagMap;
 		std::vector<int> focusFacesIntersected;
 		std::vector<int> focusFacesNoIntersected;
+
 		for (int i = 0; i < meshFocusFacesMapper.size(); i++)
 		{
 			int faceIndex = meshFocusFacesMapper[i];
 			trimesh::TriMesh::Face& face = m_mesh->faces[faceIndex];
-			bool isIntersected = rayIntersectTriangle(m_cylinderPointStart, m_cylinderDir, m_mesh->vertices[face[0]], m_mesh->vertices[face[1]], m_mesh->vertices[face[2]],
+			bool isIntersected = rayIntersectTriangle(checkPoint, m_cylinderDir, m_mesh->vertices[face[0]], m_mesh->vertices[face[1]], m_mesh->vertices[face[2]],
 				&t, &u, &v);
 			if (isIntersected)
 			{
 				trimesh::vec3 faceNormal = trimesh::normalized((m_mesh->vertices[face[1]] - m_mesh->vertices[face[0]]) TRICROSS(m_mesh->vertices[face[2]] - m_mesh->vertices[face[0]]));
 
-				if(m_mirrorFlag)
-					directionFlagMap[faceIndex] = faceNormal.dot(-m_cylinderDir) < 0;
-				else
-					directionFlagMap[faceIndex] = faceNormal.dot(m_cylinderDir) < 0;
+				directionFlagMap[faceIndex] = faceNormal.dot(m_cylinderDir) < 0;
 
-				trimesh::vec3 vertices1 = m_mesh->vertices[face[0]];
-				trimesh::vec3 vertices2 = m_mesh->vertices[face[1]];
-				trimesh::vec3 vertices3 = m_mesh->vertices[face[2]];
+				intersectedPos = checkPoint + t * m_cylinderDir;
 
-				intersectedPos = m_cylinderPointStart + t * m_cylinderDir;
+				double depth2 = trimesh::dist2(intersectedPos, trimesh::dvec3(checkPoint));
 
-				double depth2 = trimesh::dist2(intersectedPos, trimesh::dvec3(m_cylinderPointStart));
 				faceDisMap[faceIndex] = depth2;
 
-				focusFacesIntersected.push_back(faceIndex); 
+				focusFacesIntersected.push_back(faceIndex);
+
 			}
 			else
 			{
@@ -1006,6 +1037,32 @@ namespace msbase
 		}
 
 		return drillDepth;
+	}
+
+	double OptimizeCylinderCollide::getMaxDrillDepth()
+	{
+		// check additional circle perimeter point 
+		std::vector<trimesh::point> circleCheckPoints;
+
+		int checkNum = m_cylinderResolution;
+		if (checkNum >= 20)
+		{
+			// if cylinder shape is circle, only need 5 additional check points
+			checkNum = 5;
+		}
+
+		circleCheckPoints  = getCirclePerimeterPoint(m_cylinderPointStart, m_cylinderDir, m_cylinderRadius, checkNum);
+		circleCheckPoints.emplace_back(m_cylinderPointStart);
+
+		double maxDrillDepth = 0.0f;
+		for (int i = 0; i < circleCheckPoints.size(); i++)
+		{
+			double tmpDepth = getDrillDepth(circleCheckPoints[i]);
+			if (tmpDepth > maxDrillDepth)
+				maxDrillDepth = tmpDepth;
+		}
+
+		return maxDrillDepth;
 	}
 
 	bool OptimizeCylinderCollide::lineCollideTriangle(trimesh::dvec3 linePos, trimesh::dvec3 lineDir, trimesh::dvec3 A, trimesh::dvec3 B, trimesh::dvec3 C, trimesh::dvec3& intersectedPos)
