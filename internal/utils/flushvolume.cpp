@@ -8,7 +8,8 @@ namespace msbase
     static const float g_min_flush_multiplier = 0.f;
     static const float g_max_flush_multiplier = 3.f;
     //const int m_min_flush_volume = 107;
-    const int m_max_flush_volume = 800;
+    //const int m_max_flush_volume = 800;
+    const int m_max_flush_volume = 1600;
 
     static float to_radians(float degree)
     {
@@ -98,7 +99,8 @@ namespace msbase
 
         //float flush_multiplier = std::atof(m_flush_multiplier_ebox->GetValue().c_str());
         flush_volume += extra_flush_volume;
-        return std::min((int)flush_volume, m_max_flush_volume);
+        float max_flush_volume = extra_flush_volume * 7.5;
+        return std::min((int)flush_volume, std::min((int)max_flush_volume, m_max_flush_volume));
     }
 
     void calc_flushing_volumes(std::vector<trimesh::vec3>& m_colours, std::vector<bool>& filament_is_support,std::vector<float>& m_matrix,float flush_multiplier,float extra_flush_volume)
