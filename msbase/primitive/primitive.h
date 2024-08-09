@@ -2,6 +2,7 @@
 #define MSBASE_PRIMITIVE_1695439721999_H
 #include "msbase/interface.h"
 #include "trimesh2/TriMesh.h"
+#include <cstdint>
 
 namespace msbase
 {
